@@ -1,9 +1,26 @@
+import { useAnimationFrame } from "@cruise-automation/hooks";
 import React from "react";
-import Worldview, { Axes, Grid, Spheres } from "regl-worldview";
+import Worldview, {
+  Axes,
+  DEFAULT_CAMERA_STATE,
+  Grid,
+  Spheres
+} from "regl-worldview";
 import "./App.css";
+import CarModel from "./CarModel";
 
 function App() {
   const steps = 500;
+  const [count, setCount] = React.useState(0);
+  useAnimationFrame(
+    () => {
+      const newCount = (count + 1) % steps;
+      setCount(newCount);
+    },
+    false,
+    []
+  );
+
   // map a number/index to a specific color
   function numberToColor(number, max, a = 1) {
     const i = (number * 255) / max;
@@ -42,8 +59,24 @@ function App() {
 
   return (
     <div className="App" style={{ width: "100vw", height: "100vh" }}>
-      <Worldview>
+      <Worldview
+        cameraState={{
+          ...DEFAULT_CAMERA_STATE,
+          distance: 200,
+          thetaOffset: count / 100,
+          phi: count / 100
+        }}
+      >
         <Spheres>{[sphereMarker]}</Spheres>
+        <CarModel>
+          {{
+            pose: {
+              position: { x: 0, y: 0, z: 0 },
+              orientation: { x: 0, y: 0, z: 0, w: 1 }
+            },
+            scale: { x: 0.02, y: 0.02, z: 0.02 }
+          }}
+        </CarModel>
         <Grid />
         <Axes />
       </Worldview>
