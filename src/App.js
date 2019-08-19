@@ -1,12 +1,8 @@
 import { useAnimationFrame } from "@cruise-automation/hooks";
 import { quat, vec3 } from "gl-matrix";
 import React from "react";
-import Worldview, {
-  Axes,
-  DEFAULT_CAMERA_STATE,
-  Grid,
-  Spheres
-} from "regl-worldview";
+import Tree from "react-json-tree";
+import Worldview, { Axes, DEFAULT_CAMERA_STATE, Spheres } from "regl-worldview";
 import "./App.css";
 import CarModel from "./CarModel";
 
@@ -49,7 +45,10 @@ function getOrientation(len) {
 
 function App() {
   const steps = 500;
+  const scale = (Math.PI * 2) / steps;
   const [count, setCount] = React.useState(0);
+  const [clickedObject, setClickedObject] = React.useState(null);
+
   useAnimationFrame(
     () => {
       const newCount = (count + 1) % steps;
@@ -58,8 +57,6 @@ function App() {
     false,
     []
   );
-
-  const scale = (Math.PI * 2) / steps;
 
   const sphereMarker = {
     pose: {
@@ -92,18 +89,23 @@ function App() {
   return (
     <div className="App" style={{ width: "100vw", height: "100vh" }}>
       <Worldview
-        cameraState={{
+        onClick={(ev, { objects }) => {
+          if (objects.length > 0) {
+            setClickedObject(objects[0]);
+          } else {
+            setClickedObject(null);
+          }
+        }}
+        defaultCameraState={{
           ...DEFAULT_CAMERA_STATE,
-          distance: 200,
-          target: [carPosition.x, carPosition.y, carPosition.z],
-          targetOrientation: [
-            carOrientation.x,
-            carOrientation.y,
-            carOrientation.z,
-            carOrientation.w
-          ]
+          distance: 100
         }}
       >
+        {clickedObject && (
+          <div style={{ position: "absolute", top: 0, left: 0 }}>
+            <Tree data={clickedObject} hideRoot />
+          </div>
+        )}
         <Spheres>{[sphereMarker]}</Spheres>
         <CarModel>
           {{
@@ -114,7 +116,6 @@ function App() {
             scale: { x: 0.02, y: 0.02, z: 0.02 }
           }}
         </CarModel>
-        <Grid />
         <Axes />
       </Worldview>
     </div>
